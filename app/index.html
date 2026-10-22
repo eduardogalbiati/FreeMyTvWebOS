@@ -177,11 +177,11 @@
             width: 34px;
             height: 34px;
             border-radius: 10px;
-            background: linear-gradient(135deg, #0a84ff, #0050c8);
+            background: linear-gradient(135deg, #a78bfa, #5b2fd9);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(10, 132, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(124, 77, 255, 0.45);
         }
 
         .brand-logo svg {
@@ -194,18 +194,6 @@
             font-size: 24px;
             font-weight: 700;
             letter-spacing: -0.6px;
-        }
-
-        .tag-pill {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: rgba(48, 209, 88, 0.15);
-            color: #30d158;
-            border: 1px solid rgba(48, 209, 88, 0.3);
-            padding: 4px 10px;
-            border-radius: 12px;
         }
 
         .header-info {
@@ -271,14 +259,16 @@
 
         .clock-group {
             display: flex;
-            align-items: baseline;
-            gap: 14px;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
         }
 
         .clock {
-            font-size: 30px;
+            font-size: 60px;
             font-weight: 300;
-            letter-spacing: -0.5px;
+            letter-spacing: -1.5px;
+            line-height: 1;
             color: #ffffff;
         }
 
@@ -820,6 +810,232 @@
             font-weight: 600;
         }
 
+        /* More panel: slides up over the home on ▼ from the dock.
+           Left = Launchpad of every app & input, right = widgets. */
+        .more-panel {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 500;
+            display: flex;
+            gap: 28px;
+            padding: 34px 54px;
+            background: rgba(6, 6, 14, 0.62);
+            backdrop-filter: blur(34px) saturate(1.3);
+            -webkit-backdrop-filter: blur(34px) saturate(1.3);
+            transform: translate3d(0, 100%, 0);
+            transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1);
+            will-change: transform;
+        }
+
+        .more-panel.open { transform: translate3d(0, 0, 0); }
+
+        .more-left {
+            flex: 0 0 58%;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .more-right {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .more-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .more-title {
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -0.8px;
+        }
+
+        .more-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 760px;
+        }
+
+        .launchpad {
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 10px 6px;
+            overflow: hidden;
+        }
+
+        .lp-tile {
+            width: 138px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 9px;
+            padding: 12px 6px 10px;
+            border: none;
+            border-radius: 20px;
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            outline: none;
+            will-change: transform;
+            transition: transform 0.22s cubic-bezier(0.3, 1.3, 0.5, 1), background 0.2s ease;
+        }
+
+        .lp-tile:hover,
+        .lp-tile:focus,
+        .lp-tile.focused {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.06);
+        }
+
+        .lp-icon {
+            width: 84px;
+            height: 84px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        }
+
+        .lp-icon::before {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; top: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0));
+            pointer-events: none;
+        }
+
+        .lp-icon svg { width: 66%; height: 66%; }
+        .lp-icon img { position: absolute; width: 100%; height: 100%; object-fit: contain; }
+        .lp-icon img.tile-brand-logo { width: 70%; height: 70%; left: 15%; top: 15%; }
+        .lp-icon .app-art-fallback { font-size: 13px; padding: 6px; }
+
+        .lp-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .widget {
+            background: var(--glass-shelf);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 16px 20px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .widget-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .widget-meta {
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-secondary);
+        }
+
+        .week-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .week-day {
+            flex: 1 1 0;
+            min-width: 0;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 10px 4px;
+            text-align: center;
+        }
+
+        .week-day.today { background: rgba(255, 255, 255, 0.13); }
+        .week-name { font-size: 12px; color: var(--text-secondary); }
+        .week-icon { font-size: 22px; margin: 4px 0; }
+        .week-max { font-size: 15px; font-weight: 700; }
+        .week-min { font-size: 12px; color: var(--text-secondary); }
+
+        .market-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .market-row:last-child { border-bottom: none; }
+        .market-name { flex: 1 1 auto; min-width: 0; }
+        .market-label { font-size: 15px; font-weight: 600; }
+        .market-sub { font-size: 12px; color: var(--text-secondary); }
+        .market-value { font-size: 17px; font-weight: 600; text-align: right; white-space: nowrap; }
+        .market-change {
+            flex: 0 0 76px;
+            text-align: right;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+        .market-change.up { color: #30d158; background: rgba(48, 209, 88, 0.14); }
+        .market-change.down { color: #ff453a; background: rgba(255, 69, 58, 0.14); }
+        .market-change.flat { color: var(--text-secondary); background: rgba(255, 255, 255, 0.07); }
+
+        .sys-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 0;
+        }
+
+        .sys-label { flex: 0 0 150px; font-size: 14px; font-weight: 600; }
+        .sys-label small { display: block; font-size: 11px; font-weight: 400; color: var(--text-secondary); }
+        .sys-bar {
+            flex: 1 1 auto;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        .sys-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #a78bfa, #5b2fd9);
+            transition: width 0.6s ease;
+        }
+        .sys-val { flex: 0 0 56px; text-align: right; font-size: 14px; font-weight: 600; }
+
         /* OLED-Safe Idle Screensaver */
         .screensaver {
             position: fixed;
@@ -878,9 +1094,9 @@
                     <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
                 </div>
                 <div class="brand-title">@edugalbs TV</div>
-                <div class="tag-pill" id="themeBadge">60 FPS • Onboard</div>
             </div>
             <div class="header-info">
+                <button class="header-btn nav-item" id="moreBtn" data-tag="More" data-title="All Apps & Widgets" data-desc="Every app and input on your TV, plus the week's weather, markets and system stats. You can also press ▼ from the dock.">▾ More</button>
                 <button class="header-btn nav-item" id="reorderShelfBtn" data-tag="Dock" data-title="Reorder dock" data-desc="Rearrange the apps in your dock with the remote.">↔ Reorder</button>
                 <button class="header-btn nav-item" id="customizeBtn" data-tag="Personalize" data-title="Customize Dock & Settings" data-desc="Choose which installed TV apps appear in your dock, set the weather city, theme and morning video.">
                     <span>⚙️ Customize</span>
@@ -893,8 +1109,8 @@
                     </div>
                 </div>
                 <div class="clock-group">
-                    <div class="date" id="dateText">Mon, Oct 19</div>
                     <div class="clock" id="clockText">20:30</div>
+                    <div class="date" id="dateText">Mon, Oct 19</div>
                 </div>
             </div>
         </header>
@@ -920,6 +1136,43 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- More panel: Launchpad + widgets (press ▼ from the dock) -->
+    <div class="more-panel" id="morePanel" aria-hidden="true">
+        <div class="more-left">
+            <div class="more-head">
+                <div>
+                    <div class="more-title">All Apps &amp; Inputs</div>
+                    <div class="more-sub" id="moreSub">▲ or Back returns to the dock</div>
+                </div>
+                <button class="header-btn nav-item" id="closeMoreBtn" data-title="Back to dock" data-desc="Close this panel.">✕ Close</button>
+            </div>
+            <div class="launchpad" id="launchpadGrid"></div>
+        </div>
+        <div class="more-right">
+            <div class="widget">
+                <div class="widget-title">This Week <span class="widget-meta" id="weekCity">Loading…</span></div>
+                <div class="week-row" id="weekRow"></div>
+            </div>
+            <div class="widget">
+                <div class="widget-title">Markets <span class="widget-meta" id="marketsMeta">Loading…</span></div>
+                <div id="marketList"></div>
+            </div>
+            <div class="widget">
+                <div class="widget-title">System <span class="widget-meta" id="sysMeta"></span></div>
+                <div class="sys-row">
+                    <div class="sys-label">CPU <small id="sysCpuNote">UI load, estimated</small></div>
+                    <div class="sys-bar"><div class="sys-fill" id="sysCpuFill"></div></div>
+                    <div class="sys-val" id="sysCpuVal">--</div>
+                </div>
+                <div class="sys-row">
+                    <div class="sys-label">Memory <small id="sysMemNote">reading…</small></div>
+                    <div class="sys-bar"><div class="sys-fill" id="sysMemFill"></div></div>
+                    <div class="sys-val" id="sysMemVal">--</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Customize Shelf & Settings Modal -->
@@ -963,6 +1216,10 @@
                     <div class="field-group">
                         <label>Morning Video (path or URL, .mp4)</label>
                         <input type="text" class="field-input modal-nav" id="cfgMorningVideo" placeholder="assets/bg/morning.mp4">
+                    </div>
+                    <div class="field-group">
+                        <label>Twelve Data API Key (S&amp;P 500, optional)</label>
+                        <input type="text" class="field-input modal-nav" id="cfgTwelveKey" placeholder="Free key from twelvedata.com">
                     </div>
                 </div>
             </div>
@@ -1126,6 +1383,9 @@
             lon: parseFloat(localStorage.getItem('fmtv_lon') || '0'),
             theme: localStorage.getItem('fmtv_theme') || 'auto',
             morningVideo: localStorage.getItem('fmtv_morning_video') || 'assets/bg/morning.mp4',
+            twelveKey: localStorage.getItem('fmtv_twelve_key') || '',
+            weatherCity: '',
+            weekForecast: [],
             catalog: DEFAULT_CATALOG.slice(),
             hourlyForecast: [],
             sunrise: '',
@@ -1135,6 +1395,19 @@
         };
 
         // --- Clock & Date ---
+        // Element.closest() is missing on Chromium 38 (webOS 3.x).
+        if (window.Element && !Element.prototype.closest) {
+            Element.prototype.closest = function(selector) {
+                var el = this;
+                var matches = el.matches || el.webkitMatchesSelector || el.msMatchesSelector;
+                while (el && el.nodeType === 1) {
+                    if (matches.call(el, selector)) return el;
+                    el = el.parentNode;
+                }
+                return null;
+            };
+        }
+
         function pad2(n) {
             return ('0' + n).slice(-2);
         }
@@ -1231,7 +1504,6 @@
 
             document.body.classList.remove('theme-day', 'theme-sunset', 'theme-oled', 'theme-morning', 'theme-space');
             if (resolved !== 'night') document.body.classList.add('theme-' + resolved);
-            document.getElementById('themeBadge').textContent = THEME_BADGES[resolved];
 
             setMorningVideo(resolved === 'morning');
             if (resolved === 'space') drawSpaceScene();
@@ -1483,7 +1755,7 @@
                     var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
                         '&current=temperature_2m,weather_code,is_day' +
                         '&hourly=temperature_2m,weather_code' +
-                        '&daily=sunrise,sunset&timezone=auto&forecast_days=2';
+                        '&daily=sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7';
                     return fetch(url).then(function(res) { return res.json(); });
                 })
                 .then(function(data) {
@@ -1519,6 +1791,20 @@
                         state.isNight = !isDay;
                         document.getElementById('weatherSub').textContent = cityLabel + sunsetStr;
                         applyTheme();
+                    }
+
+                    // 7-day outlook for the More panel widget
+                    if (data.daily && Array.isArray(data.daily.time) && data.daily.temperature_2m_max) {
+                        state.weatherCity = cityLabel;
+                        state.weekForecast = data.daily.time.map(function(t, i) {
+                            return {
+                                date: t,
+                                code: data.daily.weather_code ? data.daily.weather_code[i] : 0,
+                                max: Math.round(data.daily.temperature_2m_max[i]),
+                                min: Math.round(data.daily.temperature_2m_min[i])
+                            };
+                        });
+                        renderWeekForecast();
                     }
 
                     if (data.hourly && Array.isArray(data.hourly.time)) {
@@ -1675,28 +1961,7 @@
 
                 var iconDiv = document.createElement('div');
                 iconDiv.className = 'app-icon';
-                iconDiv.style.background = app.bg || 'linear-gradient(135deg, #0a84ff, #0040a0)';
-                if (isHDMI(app)) {
-                    iconDiv.style.background = device.color;
-                    if (device.logo) {
-                        var fallback = document.createElement('span');
-                        fallback.className = 'app-art-fallback';
-                        fallback.textContent = device.title;
-                        iconDiv.appendChild(fallback);
-                        addTileImage(iconDiv, 'assets/brands/' + device.logo + '.svg', true);
-                    } else {
-                        iconDiv.innerHTML = deviceArtwork(device.shape);
-                    }
-                } else {
-                    var fallback = document.createElement('span');
-                    fallback.className = 'app-art-fallback';
-                    fallback.textContent = app.title;
-                    iconDiv.appendChild(fallback);
-                    var logo = APP_LOGOS[app.id];
-                    if (logo || app.iconUrl) {
-                        addTileImage(iconDiv, logo ? 'assets/brands/' + logo + '.svg' : app.iconUrl, !!logo);
-                    }
-                }
+                buildIconArt(app, device, iconDiv);
 
                 var labelDiv = document.createElement('div');
                 labelDiv.className = 'app-label';
@@ -1762,6 +2027,327 @@
             button.addEventListener('mouseenter', function() { setMainFocus(button); });
         });
 
+        // Fills an icon container with the app's artwork: brand SVG, TV-provided icon,
+        // HDMI device logo/shape, or a readable text fallback. Shared by dock + Launchpad.
+        function buildIconArt(app, device, iconDiv) {
+            iconDiv.style.background = app.bg || 'linear-gradient(135deg, #0a84ff, #0040a0)';
+            var fallback = document.createElement('span');
+            fallback.className = 'app-art-fallback';
+            if (isHDMI(app)) {
+                iconDiv.style.background = device.color;
+                if (device.logo) {
+                    fallback.textContent = device.title;
+                    iconDiv.appendChild(fallback);
+                    addTileImage(iconDiv, 'assets/brands/' + device.logo + '.svg', true);
+                } else {
+                    iconDiv.innerHTML = deviceArtwork(device.shape);
+                }
+            } else {
+                fallback.textContent = app.title;
+                iconDiv.appendChild(fallback);
+                var logo = APP_LOGOS[app.id];
+                if (logo || app.iconUrl) {
+                    addTileImage(iconDiv, logo ? 'assets/brands/' + logo + '.svg' : app.iconUrl, !!logo);
+                }
+            }
+        }
+
+        // --- More Panel: Launchpad + Widgets ---
+        var morePanel = document.getElementById('morePanel');
+        var moreOpen = false;
+        var lastHomeItem = null;
+
+        // Dock favourites first (in dock order), then every other app A-Z, inputs last.
+        function launchpadApps() {
+            var favs = state.favorites
+                .map(function(id) { return arrFind(state.catalog, function(c) { return c.id === id; }); })
+                .filter(Boolean);
+            var rest = state.catalog.filter(function(c) { return favs.indexOf(c) === -1 && !isHDMI(c); });
+            rest.sort(function(a, b) { return a.title.localeCompare(b.title); });
+            var inputs = state.catalog.filter(isHDMI);
+            return favs.concat(rest, inputs);
+        }
+
+        function renderLaunchpad() {
+            var grid = document.getElementById('launchpadGrid');
+            grid.innerHTML = '';
+            launchpadApps().forEach(function(app) {
+                var device = devicePreset(app, state.hdmiDevices);
+                var title = device.title ? device.title + ' · ' + app.title : app.title;
+                var btn = document.createElement('button');
+                btn.className = 'lp-tile nav-item';
+                btn.dataset.id = app.id;
+                btn.dataset.tag = app.tag;
+                btn.dataset.title = title;
+                btn.dataset.desc = device.title ? 'Play ' + device.title + ' on ' + app.title + '.' : app.desc;
+                btn.dataset.color = app.color;
+                btn.setAttribute('aria-label', title);
+
+                var icon = document.createElement('div');
+                icon.className = 'lp-icon';
+                buildIconArt(app, device, icon);
+
+                var label = document.createElement('div');
+                label.className = 'lp-label';
+                label.textContent = title;
+
+                btn.appendChild(icon);
+                btn.appendChild(label);
+                btn.addEventListener('mouseenter', function() { setMainFocus(btn); });
+                btn.addEventListener('click', function() { launchApp(app.id); });
+                grid.appendChild(btn);
+            });
+        }
+
+        function openMorePanel() {
+            if (moreOpen || shelfEdit || modalOpen || drawerOpen) return;
+            lastHomeItem = mainNavItems[curIndex] || null;
+            moreOpen = true;
+            renderLaunchpad();
+            renderWeekForecast();
+            if (Date.now() - marketsFetchedAt > 5 * 60 * 1000) fetchMarkets();
+            morePanel.classList.add('open');
+            morePanel.setAttribute('aria-hidden', 'false');
+            startSysMonitor();
+            refreshMainNavList();
+            var first = morePanel.querySelector('.lp-tile');
+            if (first) setMainFocus(first);
+        }
+
+        function closeMorePanel() {
+            if (!moreOpen) return;
+            moreOpen = false;
+            morePanel.classList.remove('open');
+            morePanel.setAttribute('aria-hidden', 'true');
+            stopSysMonitor();
+            refreshMainNavList();
+            var target = (lastHomeItem && lastHomeItem.offsetParent !== null) ? lastHomeItem : document.querySelector('#appsGrid .app-tile');
+            if (target) setMainFocus(target);
+        }
+
+        document.getElementById('moreBtn').addEventListener('click', openMorePanel);
+        document.getElementById('closeMoreBtn').addEventListener('click', closeMorePanel);
+        document.getElementById('moreBtn').addEventListener('mouseenter', function() { setMainFocus(this); });
+        document.getElementById('closeMoreBtn').addEventListener('mouseenter', function() { setMainFocus(this); });
+
+        // --- Widget: 7-day forecast ---
+        function renderWeekForecast() {
+            var row = document.getElementById('weekRow');
+            var meta = document.getElementById('weekCity');
+            if (!state.weekForecast.length) {
+                meta.textContent = 'Waiting for forecast…';
+                return;
+            }
+            meta.textContent = state.weatherCity || '';
+            row.innerHTML = '';
+            state.weekForecast.forEach(function(day, i) {
+                var d = new Date(day.date + 'T12:00:00');
+                var name = i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' });
+                var wmo = WMO_CODES[day.code] || ['⛅', 'Fair'];
+                var el = document.createElement('div');
+                el.className = 'week-day' + (i === 0 ? ' today' : '');
+                el.title = wmo[1];
+                el.innerHTML =
+                    '<div class="week-name">' + name + '</div>' +
+                    '<div class="week-icon">' + wmo[0] + '</div>' +
+                    '<div class="week-max">' + day.max + '°</div>' +
+                    '<div class="week-min">' + day.min + '°</div>';
+                row.appendChild(el);
+            });
+        }
+
+        // --- Widget: Markets ---
+        // Key-free, CORS-enabled sources: AwesomeAPI (USD/BRL), CoinGecko (BTC),
+        // HG Brasil (Ibovespa, NASDAQ, Dow), B3 (MELI34 BDR). S&P 500 needs a free
+        // Twelve Data key (Customize); without one the US indices from HG stand in.
+        var marketsFetchedAt = 0;
+        var marketRows = {};
+        var MARKET_ORDER = ['usd', 'btc', 'ibov', 'meli', 'spx', 'nasdaq', 'dow'];
+
+        // pt-BR number formatting without relying on Intl (absent on older TV engines)
+        function fmtNum(n, dec) {
+            var fixed = Math.abs(n).toFixed(dec);
+            var parts = fixed.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return (n < 0 ? '-' : '') + parts[0] + (parts[1] ? ',' + parts[1] : '');
+        }
+
+        function setMarket(key, row) {
+            marketRows[key] = row;
+            renderMarkets();
+        }
+
+        function renderMarkets() {
+            var list = document.getElementById('marketList');
+            list.innerHTML = '';
+            MARKET_ORDER.forEach(function(key) {
+                var r = marketRows[key];
+                if (!r) return;
+                var cls = r.change === null || r.change === undefined ? 'flat' : (r.change > 0.0001 ? 'up' : (r.change < -0.0001 ? 'down' : 'flat'));
+                var changeTxt = r.change === null || r.change === undefined ? '—' : (r.change > 0 ? '+' : '') + fmtNum(r.change, 2) + '%';
+                var el = document.createElement('div');
+                el.className = 'market-row';
+                el.innerHTML =
+                    '<div class="market-name"><div class="market-label">' + r.label + '</div><div class="market-sub">' + r.sub + '</div></div>' +
+                    '<div class="market-value">' + r.value + '</div>' +
+                    '<div class="market-change ' + cls + '">' + changeTxt + '</div>';
+                list.appendChild(el);
+            });
+            var meta = document.getElementById('marketsMeta');
+            if (marketsFetchedAt) {
+                var t = new Date(marketsFetchedAt);
+                meta.textContent = 'Updated ' + pad2(t.getHours()) + ':' + pad2(t.getMinutes());
+            }
+        }
+
+        function fetchJson(url) {
+            return fetch(url).then(function(res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            });
+        }
+
+        function fetchMarkets() {
+            if (typeof fetch !== 'function') return;
+            marketsFetchedAt = Date.now();
+
+            fetchJson('https://economia.awesomeapi.com.br/last/USD-BRL')
+                .then(function(d) {
+                    var q = d.USDBRL;
+                    setMarket('usd', { label: 'Dólar', sub: 'USD/BRL · AwesomeAPI', value: 'R$ ' + fmtNum(parseFloat(q.bid), 2), change: parseFloat(q.pctChange) });
+                })
+                .catch(function() { setMarket('usd', { label: 'Dólar', sub: 'USD/BRL', value: 'unavailable', change: null }); });
+
+            fetchJson('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl&include_24hr_change=true')
+                .then(function(d) {
+                    var b = d.bitcoin;
+                    setMarket('btc', { label: 'Bitcoin', sub: 'R$ ' + fmtNum(b.brl, 0) + ' · 24h · CoinGecko', value: '$ ' + fmtNum(b.usd, 0), change: b.usd_24h_change });
+                })
+                .catch(function() {
+                    fetchJson('https://economia.awesomeapi.com.br/last/BTC-BRL')
+                        .then(function(d) { var q = d.BTCBRL; setMarket('btc', { label: 'Bitcoin', sub: 'BTC/BRL · AwesomeAPI', value: 'R$ ' + fmtNum(parseFloat(q.bid), 0), change: parseFloat(q.pctChange) }); })
+                        .catch(function() { setMarket('btc', { label: 'Bitcoin', sub: 'BTC', value: 'unavailable', change: null }); });
+                });
+
+            fetchJson('https://api.hgbrasil.com/finance?format=json-cors')
+                .then(function(d) {
+                    var s = d.results && d.results.stocks ? d.results.stocks : {};
+                    if (s.IBOVESPA) setMarket('ibov', { label: 'Ibovespa', sub: 'B3 · HG Brasil', value: fmtNum(s.IBOVESPA.points, 0) + ' pts', change: s.IBOVESPA.variation });
+                    if (!state.twelveKey) {
+                        if (s.NASDAQ) setMarket('nasdaq', { label: 'NASDAQ', sub: 'US · HG Brasil', value: fmtNum(s.NASDAQ.points, 0) + ' pts', change: s.NASDAQ.variation });
+                        if (s.DOWJONES) setMarket('dow', { label: 'Dow Jones', sub: 'US · HG Brasil', value: fmtNum(s.DOWJONES.points, 0) + ' pts', change: s.DOWJONES.variation });
+                    }
+                })
+                .catch(function() { setMarket('ibov', { label: 'Ibovespa', sub: 'B3', value: 'unavailable', change: null }); });
+
+            fetchJson('https://cotacao.b3.com.br/mds/api/v1/instrumentQuotation/MELI34')
+                .then(function(d) {
+                    var q = d.Trad && d.Trad[0] && d.Trad[0].scty && d.Trad[0].scty.SctyQtn;
+                    if (!q) throw new Error('no quote');
+                    setMarket('meli', { label: 'Mercado Livre', sub: 'MELI34 BDR · B3', value: 'R$ ' + fmtNum(q.curPrc, 2), change: q.prcFlcn });
+                })
+                .catch(function() { setMarket('meli', { label: 'Mercado Livre', sub: 'MELI34 · B3', value: 'unavailable', change: null }); });
+
+            if (state.twelveKey) {
+                delete marketRows.nasdaq; delete marketRows.dow;
+                var tdQuote = function(symbol) {
+                    return fetchJson('https://api.twelvedata.com/quote?symbol=' + symbol + '&apikey=' + encodeURIComponent(state.twelveKey))
+                        .then(function(d) { if (d.status === 'error' || !d.close) throw new Error(d.message || 'no data'); return d; });
+                };
+                tdQuote('SPX')
+                    .then(function(d) { setMarket('spx', { label: 'S&P 500', sub: 'SPX · Twelve Data', value: fmtNum(parseFloat(d.close), 0) + ' pts', change: parseFloat(d.percent_change) }); })
+                    .catch(function() {
+                        return tdQuote('SPY').then(function(d) { setMarket('spx', { label: 'S&P 500', sub: 'SPY ETF proxy · Twelve Data', value: '$ ' + fmtNum(parseFloat(d.close), 2), change: parseFloat(d.percent_change) }); });
+                    })
+                    .catch(function() { setMarket('spx', { label: 'S&P 500', sub: 'check Twelve Data key', value: 'unavailable', change: null }); });
+            } else {
+                delete marketRows.spx;
+                setMarket('spx', { label: 'S&P 500', sub: 'add a free Twelve Data key in Customize', value: '—', change: null });
+            }
+        }
+
+        // --- Widget: System (CPU estimate + memory) ---
+        // Web apps on webOS get no CPU counter, so "CPU" is the main-thread load
+        // estimated from dropped animation frames. Memory tries the Luna memory
+        // manager first and falls back to this app's own JS heap.
+        var sysRaf = null, sysTimer = null, sysFrames = 0;
+
+        function setBar(fillId, valId, pct) {
+            pct = Math.max(0, Math.min(100, Math.round(pct)));
+            document.getElementById(fillId).style.width = pct + '%';
+            document.getElementById(valId).textContent = pct + '%';
+        }
+
+        function sampleCpu() {
+            var fps = sysFrames;
+            sysFrames = 0;
+            var load = Math.max(0, 1 - fps / 60) * 100;
+            setBar('sysCpuFill', 'sysCpuVal', load);
+        }
+
+        function sampleMemory() {
+            var note = document.getElementById('sysMemNote');
+            var fallback = function() {
+                var m = window.performance && performance.memory;
+                if (m && m.jsHeapSizeLimit) {
+                    note.textContent = 'app JS heap · ' + fmtNum(m.usedJSHeapSize / 1048576, 0) + ' MB';
+                    setBar('sysMemFill', 'sysMemVal', m.usedJSHeapSize / m.jsHeapSizeLimit * 100);
+                } else {
+                    note.textContent = 'not available on this device';
+                    document.getElementById('sysMemVal').textContent = '--';
+                }
+            };
+            if (window.webOS && webOS.service && typeof webOS.service.request === 'function') {
+                try {
+                    webOS.service.request('luna://com.webos.memorymanager', {
+                        method: 'getMemoryStatus',
+                        parameters: {},
+                        onSuccess: function(res) {
+                            var total = findNum(res, /total/i), free = findNum(res, /free|usable|available/i);
+                            if (total && free !== null) {
+                                note.textContent = 'TV RAM · ' + fmtNum((total - free) / 1024, 0) + ' / ' + fmtNum(total / 1024, 0) + ' MB';
+                                setBar('sysMemFill', 'sysMemVal', (total - free) / total * 100);
+                            } else fallback();
+                        },
+                        onFailure: fallback
+                    });
+                    return;
+                } catch (e) {}
+            }
+            fallback();
+        }
+
+        // Depth-first search for the first numeric value whose key matches.
+        function findNum(obj, re, depth) {
+            depth = depth || 0;
+            if (!obj || typeof obj !== 'object' || depth > 4) return null;
+            for (var k in obj) {
+                if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
+                if (typeof obj[k] === 'number' && re.test(k)) return obj[k];
+            }
+            for (var k2 in obj) {
+                if (!Object.prototype.hasOwnProperty.call(obj, k2)) continue;
+                var found = findNum(obj[k2], re, depth + 1);
+                if (found !== null) return found;
+            }
+            return null;
+        }
+
+        function startSysMonitor() {
+            if (sysTimer) return;
+            sysFrames = 0;
+            var tick = function() { sysFrames++; sysRaf = requestAnimationFrame(tick); };
+            sysRaf = requestAnimationFrame(tick);
+            sysTimer = setInterval(function() { sampleCpu(); sampleMemory(); }, 1000);
+            sampleMemory();
+        }
+
+        function stopSysMonitor() {
+            if (sysRaf) cancelAnimationFrame(sysRaf);
+            clearInterval(sysTimer);
+            sysRaf = null; sysTimer = null;
+        }
+
         // --- Focus & Spatial Navigation ---
         var mainNavItems = [];
         var curIndex = 0;
@@ -1775,7 +2361,10 @@
         var ambientGlow = document.getElementById('ambientGlow');
 
         function refreshMainNavList() {
-            mainNavItems = toArray(document.querySelectorAll(shelfEdit ? '.dock-area .nav-item' : '.nav-item')).filter(function(el) { return el.offsetParent !== null; });
+            var scope = shelfEdit ? '.dock-area .nav-item' : (moreOpen ? '#morePanel .nav-item' : '.nav-item');
+            mainNavItems = toArray(document.querySelectorAll(scope)).filter(function(el) {
+                return el.offsetParent !== null && (moreOpen || !el.closest('#morePanel'));
+            });
             if (mainNavItems.length > 0) {
                 curIndex = Math.min(curIndex, mainNavItems.length - 1);
                 // Default focus on first app tile if starting
@@ -1789,14 +2378,20 @@
 
         function setMainFocus(item) {
             if (!item || (shelfEdit && !item.closest('.dock-area'))) return;
+            var inMore = !!item.closest('#morePanel');
+            if (moreOpen !== inMore) return; // ignore stray hovers on the layer that isn't active
             document.querySelectorAll('.nav-item.focused').forEach(function(i) { i.classList.remove('focused'); });
             item.classList.add('focused');
             item.focus({ preventScroll: true });
             curIndex = mainNavItems.indexOf(item);
 
-            heroTag.textContent = item.dataset.tag || 'Selection';
-            heroTitle.textContent = item.dataset.title || '';
-            heroDesc.textContent = item.dataset.desc || '';
+            if (inMore) {
+                document.getElementById('moreSub').textContent = (item.dataset.title || '') + (item.dataset.desc ? ' · ' + item.dataset.desc : '');
+            } else {
+                heroTag.textContent = item.dataset.tag || 'Selection';
+                heroTitle.textContent = item.dataset.title || '';
+                heroDesc.textContent = item.dataset.desc || '';
+            }
 
             var color = item.dataset.color || '#0a84ff';
             ambientGlow.style.background = 'radial-gradient(circle, ' + color + '35 0%, rgba(0,0,0,0) 70%)';
@@ -1836,7 +2431,7 @@
         // every time a row was added/removed (header -> apps -> tabs -> picks).
         function moveFocusVertical(dir) {
             var current = mainNavItems[curIndex];
-            if (!current) return;
+            if (!current) return false;
             var cur = navCenter(current);
             var curX = cur.x;
             var curY = cur.y;
@@ -1854,7 +2449,7 @@
                 if (dy <= 24) return; // must actually be in the requested direction, a full row away
                 candidates.push({ idx: idx, dy: dy, dx: Math.abs(x - curX) });
             });
-            if (!candidates.length) return;
+            if (!candidates.length) return false;
 
             // Snap to the nearest row first (smallest dy), then pick whichever item in
             // that row is best horizontally aligned. Scoring dy+dx together var a
@@ -1867,6 +2462,7 @@
 
             curIndex = nearestRow[0].idx;
             setMainFocus(mainNavItems[curIndex]);
+            return true;
         }
 
         // --- Customize Shelf & Settings Modal ---
@@ -1883,6 +2479,7 @@
             document.getElementById('cfgCity').value = state.city;
             document.getElementById('cfgTheme').value = state.theme;
             document.getElementById('cfgMorningVideo').value = state.morningVideo;
+            document.getElementById('cfgTwelveKey').value = state.twelveKey;
 
             renderAppSelectorGrid();
             settingsModal.classList.add('active');
@@ -2065,6 +2662,7 @@
             document.getElementById('cfgCity').value = '';
             document.getElementById('cfgTheme').value = 'auto';
             document.getElementById('cfgMorningVideo').value = 'assets/bg/morning.mp4';
+            document.getElementById('cfgTwelveKey').value = '';
             renderAppSelectorGrid();
             refreshModalNavList();
             showToast('Defaults restored');
@@ -2077,11 +2675,14 @@
             state.city = document.getElementById('cfgCity').value.trim();
             state.theme = document.getElementById('cfgTheme').value;
             state.morningVideo = document.getElementById('cfgMorningVideo').value.trim() || 'assets/bg/morning.mp4';
+            state.twelveKey = document.getElementById('cfgTwelveKey').value.trim();
 
             localStorage.setItem('fmtv_favorites', JSON.stringify(state.favorites));
             localStorage.setItem('fmtv_city', state.city);
             localStorage.setItem('fmtv_theme', state.theme);
             localStorage.setItem('fmtv_morning_video', state.morningVideo);
+            localStorage.setItem('fmtv_twelve_key', state.twelveKey);
+            fetchMarkets();
 
             renderAppsShelf();
             applyTheme();
@@ -2125,6 +2726,9 @@
                 } else if (drawerOpen) {
                     closeDrawer();
                     e.preventDefault();
+                } else if (moreOpen) {
+                    closeMorePanel();
+                    e.preventDefault();
                 }
                 return;
             }
@@ -2166,10 +2770,14 @@
                 setMainFocus(mainNavItems[curIndex]);
                 e.preventDefault();
             } else if (e.key === 'ArrowDown') {
-                moveFocusVertical(1);
+                // ▼ from the dock (bottom row of the home) opens the More panel.
+                var onDock = mainNavItems[curIndex] && mainNavItems[curIndex].classList.contains('app-tile');
+                if (!moreOpen && onDock) openMorePanel();
+                else moveFocusVertical(1);
                 e.preventDefault();
             } else if (e.key === 'ArrowUp') {
-                moveFocusVertical(-1);
+                // ▲ past the top row of the Launchpad slides the panel away again.
+                if (!moveFocusVertical(-1) && moreOpen) closeMorePanel();
                 e.preventDefault();
             } else if (e.key === 'Enter') {
                 if (mainNavItems[curIndex]) {
@@ -2184,8 +2792,10 @@
         applyTheme();
         fetchWeather();
         discoverTVApps();
-        // Refresh weather every 30 mins
+        setTimeout(fetchMarkets, 2500); // after the first paint; the panel re-fetches if stale
+        // Refresh weather every 30 mins, markets every 15
         setInterval(fetchWeather, 30 * 60 * 1000);
+        setInterval(fetchMarkets, 15 * 60 * 1000);
     </script>
 </body>
 </html>
