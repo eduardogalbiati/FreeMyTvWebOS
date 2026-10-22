@@ -2846,6 +2846,11 @@
                 } else if (moreOpen) {
                     closeMorePanel();
                     e.preventDefault();
+                } else {
+                    // Nothing to close: an unhandled Back makes webOS quit the app,
+                    // which is not what a home screen should do. Swallow it and hint.
+                    e.preventDefault();
+                    showToast('This is your home. Press the Home button to leave.');
                 }
                 return;
             }
