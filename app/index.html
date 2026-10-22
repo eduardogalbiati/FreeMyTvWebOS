@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free My TV</title>
+    <title>@edugalbs TV</title>
     <script src="webOSTV.js"></script>
     <style>
         :root {
@@ -29,6 +29,25 @@
         body.theme-oled {
             --bg-gradient: radial-gradient(circle at 50% -10%, #0a0c12 0%, #000000 60%, #000000 100%);
             --glass-shelf: rgba(255, 255, 255, 0.04);
+        }
+
+        /* Morning Nature: forest / sea video background (05:00 - 11:59 in Auto).
+           The gradient below is what shows while the video loads or if it's missing. */
+        body.theme-morning {
+            --bg-gradient: linear-gradient(180deg, #16384a 0%, #246b5f 48%, #0d2a2b 100%);
+            --glass-shelf: rgba(255, 255, 255, 0.10);
+            --glass-border: rgba(255, 255, 255, 0.20);
+            --accent: #34c759;
+        }
+
+        /* Space Purple: deep violet cosmos inspired by edugalbs.com (18:00 - 04:59 in Auto). */
+        body.theme-space {
+            --bg-gradient: radial-gradient(circle at 50% 18%, #2a0f52 0%, #0b0320 55%, #05010d 100%);
+            --glass-shelf: rgba(201, 179, 255, 0.07);
+            --glass-border: rgba(201, 179, 255, 0.20);
+            --text-primary: #efe6ff;
+            --text-secondary: rgba(239, 230, 255, 0.62);
+            --accent: #a78bfa;
         }
 
         * {
@@ -69,6 +88,66 @@
             transition: opacity 0.35s ease;
             will-change: opacity;
             z-index: 1;
+        }
+
+        /* Time-of-day background layer (video for morning, cosmos canvas for night).
+           Sits under the ambient glow and the UI; all transitions are opacity-only. */
+        .bg-layer {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1.8s ease;
+        }
+
+        body.theme-morning .bg-video.ready { opacity: 1; }
+
+        .bg-video-dim {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(180deg, rgba(5, 15, 20, 0.35) 0%, rgba(5, 15, 20, 0.12) 40%, rgba(5, 15, 20, 0.62) 100%);
+            opacity: 0;
+            transition: opacity 1.8s ease;
+        }
+
+        body.theme-morning .bg-video.ready + .bg-video-dim { opacity: 1; }
+
+        .bg-space {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.8s ease;
+        }
+
+        body.theme-space .bg-space { opacity: 1; }
+
+        .bg-space canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Bright stars twinkle via a compositor-only opacity pulse. */
+        .bg-stars-bright {
+            animation: twinkle 7s ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0.45; }
+            to   { opacity: 1; }
         }
 
         .container {
@@ -247,118 +326,173 @@
             overflow: hidden;
         }
 
-        /* Glass App Shelf */
-        .shelf-wrapper {
-            background: var(--glass-shelf);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            padding: 20px 26px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        /* macOS-style Dock */
+        .dock-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
         }
 
         .shelf-top-bar {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
+            gap: 16px;
         }
 
-        .shelf-header {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
+        .shelf-top-bar[hidden] { display: none; }
 
         .shelf-hint {
             font-size: 13px;
             color: var(--text-secondary);
         }
 
-        .shelf-grid {
-            /* Flexbox fallback for engines without CSS Grid (e.g. webOS 3.x /
-               Chromium 38); the display: grid line below overrides it on any
-               engine that understands grid, since it comes later in the cascade. */
-            display: flex;
-            flex-wrap: wrap;
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 18px;
+        .shelf-wrapper {
+            background: var(--glass-shelf);
+            backdrop-filter: blur(30px) saturate(1.4);
+            -webkit-backdrop-filter: blur(30px) saturate(1.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 34px;
+            padding: 16px 22px 14px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.18);
         }
 
-        .app-tile {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1.5px solid rgba(255, 255, 255, 0.1);
-            border-radius: 22px;
-            aspect-ratio: 1 / 1;
-            flex: 0 0 calc((100% - 18px * 7) / 8);
+        .shelf-grid {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
-            gap: 0;
+            gap: 18px;
+            height: 118px;
+        }
+
+        /* Each tile is a rounded app icon; the label is a macOS-style tooltip above it.
+           Magnification is pure transform (compositor-only) so the TV stays at 60 FPS. */
+        .app-tile {
+            position: relative;
+            width: 112px;
+            height: 112px;
+            flex: 0 0 auto;
+            padding: 0;
+            border: none;
+            background: transparent;
+            border-radius: 26px;
             cursor: pointer;
             outline: none;
-            position: relative;
             will-change: transform;
-            transition: transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1), border-color 0.2s ease, background 0.2s ease;
-            transform: scale(1) translateZ(0);
-            padding: 0;
+            transform-origin: 50% 100%;
+            transform: translate3d(0, 0, 0) scale(1);
+            transition: transform 0.26s cubic-bezier(0.3, 1.3, 0.5, 1);
         }
+
+        .app-tile.dock-l3 { transform: translate3d(-6px, 0, 0) scale(1); }
+        .app-tile.dock-r3 { transform: translate3d(6px, 0, 0) scale(1); }
+        .app-tile.dock-l2 { transform: translate3d(-16px, 0, 0) scale(1.07); }
+        .app-tile.dock-r2 { transform: translate3d(16px, 0, 0) scale(1.07); }
+        .app-tile.dock-l1 { transform: translate3d(-30px, 0, 0) scale(1.2); }
+        .app-tile.dock-r1 { transform: translate3d(30px, 0, 0) scale(1.2); }
 
         .app-tile:hover,
         .app-tile:focus,
         .app-tile.focused {
-            transform: scale(1.04) translateY(-4px) translateZ(0);
-            border-color: var(--glass-focus-border);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 255, 255, 0.25);
+            transform: translate3d(0, -14px, 0) scale(1.42);
             z-index: 20;
-            background: rgba(255, 255, 255, 0.17);
         }
+
+        .app-tile.focused .app-icon {
+            box-shadow: 0 22px 40px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+
+        /* Running-app dot under the focused icon */
+        .app-tile::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -9px;
+            width: 5px;
+            height: 5px;
+            margin-left: -2.5px;
+            border-radius: 50%;
+            background: var(--text-primary);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .app-tile.focused::after { opacity: 0.85; }
 
         .app-icon {
             width: 100%;
-            flex: 1;
-            min-height: 0;
-            border-radius: 20px 20px 0 0;
+            height: 100%;
+            border-radius: 26px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
             position: relative;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            transition: box-shadow 0.2s ease;
         }
 
-        .app-icon svg { width: 75%; height: 75%; }
+        /* Glossy highlight across the top half, like macOS icons */
+        .app-icon::before {
+            content: '';
+            position: absolute;
+            left: 0; right: 0; top: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0));
+            pointer-events: none;
+        }
+
+        .app-icon svg { width: 68%; height: 68%; }
         .app-icon img {
             position: absolute;
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
-        .app-icon img.tile-brand-logo { width: 76%; height: 76%; }
+        .app-icon img.tile-brand-logo { width: 72%; height: 72%; left: 14%; top: 14%; }
         .app-art-fallback {
-            font-size: 25px;
+            font-size: 20px;
             font-weight: 800;
             color: #fff;
             text-align: center;
-            padding: 12px;
+            padding: 10px;
             overflow-wrap: break-word;
             max-width: 100%;
         }
+
         .app-label {
-            width: 100%;
-            padding: 12px 8px;
-            font-size: 15px;
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 16px);
+            transform: translateX(-50%);
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: rgba(22, 22, 30, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #f5f5f7;
+            font-size: 12px;
             font-weight: 600;
-            color: var(--text-primary);
-            text-align: center;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease;
         }
+
+        .app-label::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            margin-left: -6px;
+            border: 6px solid transparent;
+            border-top-color: rgba(22, 22, 30, 0.88);
+        }
+
+        .app-tile.focused .app-label { opacity: 1; }
+
+        /* While reordering, the hint bar sits where tooltips would pop up; the hero
+           title already names the focused app, so tooltips stay hidden in that mode. */
+        .shelf-top-bar:not([hidden]) ~ .shelf-wrapper .app-label { opacity: 0; }
         .hdmi-options {
             /* Flexbox fallback for engines without CSS Grid; display: grid
                below overrides it on any engine that understands grid. */
@@ -371,140 +505,6 @@
 
         .hdmi-options .app-toggle-item {
             flex: 0 0 calc((100% - 12px) / 2);
-        }
-
-        /* Trending Picks Row */
-        .picks-section {
-            margin-top: 6px;
-        }
-
-        .picks-top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .picks-header {
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-        }
-
-        .picks-source-badge {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .picks-tabs {
-            display: flex;
-            gap: 8px;
-        }
-
-        .picks-tab {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1.5px solid var(--glass-border);
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 6px 16px;
-            border-radius: 12px;
-            cursor: pointer;
-            outline: none;
-            will-change: transform;
-            transition: transform 0.2s cubic-bezier(0.3, 1.4, 0.5, 1), border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
-        }
-
-        .picks-tab.active {
-            color: var(--text-primary);
-            background: rgba(10, 132, 255, 0.22);
-            border-color: #0a84ff;
-        }
-
-        .picks-tab:hover,
-        .picks-tab:focus,
-        .picks-tab.focused {
-            border-color: var(--glass-focus-border);
-            transform: scale(1.06);
-        }
-
-        .picks-grid {
-            /* Flexbox fallback for engines without CSS Grid; display: grid
-               below overrides it on any engine that understands grid. */
-            display: flex;
-            flex-wrap: wrap;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-        }
-
-        .pick-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1.5px solid var(--glass-border);
-            border-radius: 18px;
-            height: 128px;
-            flex: 0 0 calc((100% - 20px * 3) / 4);
-            display: flex;
-            overflow: hidden;
-            cursor: pointer;
-            outline: none;
-            will-change: transform;
-            transition: transform 0.26s cubic-bezier(0.3, 1.4, 0.5, 1), border-color 0.2s ease, background 0.2s ease;
-            transform: translateZ(0);
-            position: relative;
-        }
-
-        .pick-card:hover,
-        .pick-card:focus,
-        .pick-card.focused {
-            transform: scale(1.04) translateY(-4px) translateZ(0);
-            border-color: var(--glass-focus-border);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(255,255,255,0.2);
-            background: rgba(255, 255, 255, 0.14);
-        }
-
-        .pick-poster {
-            width: 92px;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            flex-shrink: 0;
-            background-color: #1a2030;
-        }
-
-        .pick-meta {
-            padding: 12px 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 4px;
-            overflow: hidden;
-        }
-
-        .pick-badge {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--accent);
-        }
-
-        .pick-title {
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: -0.3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .pick-service {
-            font-size: 12px;
-            color: var(--text-secondary);
         }
 
         /* Modal Overlay (Settings & Customize Shelf) */
@@ -611,7 +611,8 @@
         .shelf-edit-actions { display: flex; align-items: center; gap: 10px; }
         .shelf-edit-actions[hidden], #reorderShelfBtn[hidden] { display: none; }
         .shelf-edit-actions button, #reorderShelfBtn { padding: 7px 14px; font-size: 14px; }
-        .app-tile.moving { outline: 3px solid #fff; transform: translateY(-8px); }
+        .app-tile.moving .app-icon { box-shadow: 0 0 0 3px #fff, 0 22px 40px rgba(0, 0, 0, 0.6); }
+        .app-tile.moving .app-label { opacity: 1; }
 
         .app-tile[aria-busy="true"] { border-color: var(--accent); }
 
@@ -858,6 +859,14 @@
     </style>
 </head>
 <body>
+    <div class="bg-layer" id="bgLayer" aria-hidden="true">
+        <video class="bg-video" id="bgVideo" muted loop playsinline preload="none"></video>
+        <div class="bg-video-dim"></div>
+        <div class="bg-space" id="bgSpace">
+            <canvas id="spaceCanvas"></canvas>
+            <canvas id="spaceStarsBright" class="bg-stars-bright"></canvas>
+        </div>
+    </div>
     <div class="ambient-glow" id="ambientGlow"></div>
     <div class="toast-msg" id="toastMsg" role="status" aria-live="polite">Launching...</div>
 
@@ -868,11 +877,12 @@
                 <div class="brand-logo">
                     <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
                 </div>
-                <div class="brand-title">Free My TV</div>
+                <div class="brand-title">@edugalbs TV</div>
                 <div class="tag-pill" id="themeBadge">60 FPS • Onboard</div>
             </div>
             <div class="header-info">
-                <button class="header-btn nav-item" id="customizeBtn" data-tag="Personalize" data-title="Customize Shelf & Settings" data-desc="Choose which installed TV apps appear on your shelf, configure weather city, and TMDB key.">
+                <button class="header-btn nav-item" id="reorderShelfBtn" data-tag="Dock" data-title="Reorder dock" data-desc="Rearrange the apps in your dock with the remote.">↔ Reorder</button>
+                <button class="header-btn nav-item" id="customizeBtn" data-tag="Personalize" data-title="Customize Dock & Settings" data-desc="Choose which installed TV apps appear in your dock, set the weather city, theme and morning video.">
                     <span>⚙️ Customize</span>
                 </button>
                 <div class="weather-widget nav-item" id="weatherWidget" data-tag="Live Forecast" data-title="Local Weather & Sunset" data-desc="Live temperature and sky conditions powered by Open-Meteo.">
@@ -896,39 +906,27 @@
             <div class="hero-desc" id="heroDesc">Navigate smoothly with Magic Remote D-Pad or pointer. Launch apps in 100ms with zero ads.</div>
         </div>
 
-        <!-- Glass Shelf: Apps -->
-        <div class="shelf-wrapper">
-            <div class="shelf-top-bar">
-                <div class="shelf-header">Favorite Apps</div>
+        <!-- Dock: Apps (macOS-style, centered, magnifies on focus) -->
+        <div class="dock-area">
+            <div class="shelf-top-bar" id="shelfTopBar" hidden>
                 <div class="shelf-hint" id="shelfCountHint" aria-live="polite">Instant Native Launch</div>
-                <button class="header-btn nav-item" id="reorderShelfBtn" data-title="Reorder tiles" data-desc="Rearrange your apps right here on the shelf.">Reorder</button>
                 <div class="shelf-edit-actions" id="shelfEditActions" hidden>
-                    <button class="header-btn nav-item" id="saveShelfOrder" data-title="Save tile order">Done</button>
+                    <button class="header-btn nav-item" id="saveShelfOrder" data-title="Save dock order">Done</button>
                     <button class="header-btn nav-item" id="cancelShelfOrder" data-title="Cancel reordering">Cancel</button>
                 </div>
             </div>
-            <div class="shelf-grid" id="appsGrid"></div>
+            <div class="shelf-wrapper">
+                <div class="shelf-grid" id="appsGrid"></div>
+            </div>
         </div>
 
-        <!-- Trending Picks Row -->
-        <div class="picks-section">
-            <div class="picks-top-bar">
-                <div class="picks-header">Trending This Week</div>
-                <div class="picks-tabs">
-                    <button class="picks-tab nav-item active" id="tabMovies" data-tag="Trending" data-title="Movies" data-desc="Switch the row below to this week's trending movies.">Movies</button>
-                    <button class="picks-tab nav-item" id="tabShows" data-tag="Trending" data-title="Shows" data-desc="Switch the row below to this week's trending TV shows.">Shows</button>
-                </div>
-                <div class="picks-source-badge" id="picksSourceBadge">Live Feed</div>
-            </div>
-            <div class="picks-grid" id="picksGrid"></div>
-        </div>
     </div>
 
     <!-- Customize Shelf & Settings Modal -->
     <div class="modal-backdrop" id="settingsModal">
         <div class="modal-box">
             <div class="modal-header">
-                <div class="modal-title">Customize Free My TV</div>
+                <div class="modal-title">Customize @edugalbs TV</div>
                 <div style="font-size: 13px; color: var(--text-secondary);">Press BACK or ESC to close</div>
             </div>
 
@@ -945,7 +943,7 @@
             </div>
 
             <div>
-                <div class="modal-section-title">3. Weather, Theme & TMDB API</div>
+                <div class="modal-section-title">3. Weather & Theme</div>
                 <div class="settings-row">
                     <div class="field-group">
                         <label>City Name (or leave Auto)</label>
@@ -954,15 +952,17 @@
                     <div class="field-group">
                         <label>Theme Mode</label>
                         <select class="field-input modal-nav" id="cfgTheme">
-                            <option value="auto">Auto (Follows Sunset)</option>
-                            <option value="night">Deep Midnight (Default)</option>
+                            <option value="auto">Auto (Morning Video → Day → Space after 18h)</option>
+                            <option value="morning">Morning Nature (Video)</option>
+                            <option value="space">Space Purple</option>
+                            <option value="night">Deep Midnight</option>
                             <option value="oled">Pure OLED Black</option>
                             <option value="day">Daylight Blue</option>
                         </select>
                     </div>
                     <div class="field-group">
-                        <label>TMDB API Key (Optional)</label>
-                        <input type="text" class="field-input modal-nav" id="cfgTmdbKey" placeholder="Optional for TMDB Trending">
+                        <label>Morning Video (path or URL, .mp4)</label>
+                        <input type="text" class="field-input modal-nav" id="cfgMorningVideo" placeholder="assets/bg/morning.mp4">
                     </div>
                 </div>
             </div>
@@ -1044,6 +1044,7 @@
             { id: 'com.webos.app.mediadiscovery', title: 'Media Player', tag: 'Local Media', desc: 'Play photos, videos, and music from USB or DLNA servers.', color: '#7e56b1', badge: 'USB', bg: 'linear-gradient(135deg, #7e56b1, #4f3278)' },
             { id: 'amazon', title: 'Prime Video', tag: 'Movies & Shows', desc: 'Watch Amazon Originals, popular movies, and live sports.', color: '#00a8e1', badge: 'prime', bg: 'linear-gradient(135deg, #00a8e1, #00628a)' },
             { id: 'com.disney.disneyplus-prod', title: 'Disney+', tag: 'Streaming', desc: 'Disney, Pixar, Marvel, Star Wars, and National Geographic.', color: '#113ccf', badge: 'D+', bg: 'linear-gradient(135deg, #113ccf, #071961)' },
+            { id: 'com.hbo.hbomax', title: 'HBO Max', tag: 'Movies & Series', desc: 'HBO originals, Warner Bros. blockbusters, and live sports.', color: '#5b2fd9', badge: 'HBO', bg: 'linear-gradient(135deg, #0f0a2e, #3b1fa8)' },
             { id: 'spotify-beehive', title: 'Spotify', tag: 'Music', desc: 'Listen to millions of songs, albums, and podcasts on your TV.', color: '#1db954', badge: 'SP', bg: 'linear-gradient(135deg, #1db954, #0f7833)' }
         ];
 
@@ -1082,6 +1083,7 @@
             'globoplaywebos': 'globoplay',
             'amazon': 'amazonprime',
             'com.disney.disneyplus-prod': 'disneyplus',
+            'com.hbo.hbomax': 'hbomax',
             'spotify-beehive': 'spotify'
         };
         function addTileImage(container, url, branded) {
@@ -1104,32 +1106,15 @@
             return ''; // Unresolvable paths use the readable tile fallback.
         }
 
-        // Defaults favor the streaming apps with the broadest global install base
-        // (YouTube/Netflix/Prime/Disney+) over niche regional or personal-media apps
-        // like Plex or Globoplay, which stay one tap away in Customize for anyone who uses them.
+        // The dock ships with exactly the six streaming apps this home screen is for;
+        // everything else in the catalog stays one tap away in Customize.
         var DEFAULT_FAVORITES = [
             'youtube.leanback.v4',
             'netflix',
             'amazon',
+            'com.hbo.hbomax',
             'com.disney.disneyplus-prod',
-            'com.crunchyroll.webapp',
-            'com.webos.app.hdmi1',
-            'com.webos.app.browser',
-            'org.webosbrew.hbchannel'
-        ];
-
-        var FALLBACK_MOVIES = [
-            { title: 'Dune: Part Two', badge: 'Sci-Fi • 8.8★', service: 'Watch on Max / Netflix', app: 'netflix', desc: 'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators.', poster: 'https://image.tmdb.org/t/p/w300/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg', color: '#e5a00d' },
-            { title: 'Oppenheimer', badge: 'Drama • 8.3★', service: 'Watch on Prime Video', app: 'amazon', desc: 'The story of American scientist J. Robert Oppenheimer and his role in developing the atomic bomb.', poster: '', color: '#00a8e1' },
-            { title: 'Spider-Man: Across the Spider-Verse', badge: 'Animation • 8.6★', service: 'Watch on Netflix', app: 'netflix', desc: 'Miles Morales catapults across the Multiverse to team up with Gwen Stacy and a new crew of Spider-People.', poster: '', color: '#5856d6' },
-            { title: 'Barbie', badge: 'Comedy • 7.0★', service: 'Watch on Max', app: 'netflix', desc: 'Barbie and Ken venture from Barbie Land to the real world in search of true happiness.', poster: '', color: '#ff375f' }
-        ];
-
-        var FALLBACK_SHOWS = [
-            { title: 'Severance', badge: 'Thriller • 8.7★', service: 'Trending Series', app: 'netflix', desc: 'Mark leads a team of office workers whose memories have been surgically divided between work and personal lives.', poster: 'https://image.tmdb.org/t/p/w300/e9Lra4Wv77L84a0d8lEwB47zYqS.jpg', color: '#0a84ff' },
-            { title: 'Demon Slayer: Infinity', badge: 'Anime • 8.9★', service: 'Watch on Crunchyroll', app: 'com.crunchyroll.webapp', desc: 'Tanjiro and the Hashira face the Upper Rank demons in the final stronghold.', poster: 'https://image.tmdb.org/t/p/w300/xUfRZu2mi8jH6SzQEJGP6tjBuYj.jpg', color: '#f47521' },
-            { title: 'The Last of Us', badge: 'Drama • 8.8★', service: 'Watch on Max', app: 'netflix', desc: 'Joel and Ellie navigate a brutal, infected America in search of a cure.', poster: '', color: '#e5a00d' },
-            { title: 'Stranger Things', badge: 'Sci-Fi • 8.6★', service: 'Watch on Netflix', app: 'netflix', desc: 'A group of kids uncover supernatural mysteries in the small town of Hawkins, Indiana.', poster: '', color: '#ff0000' }
+            'globoplaywebos'
         ];
 
         // --- Persistent State ---
@@ -1140,9 +1125,8 @@
             lat: parseFloat(localStorage.getItem('fmtv_lat') || '0'),
             lon: parseFloat(localStorage.getItem('fmtv_lon') || '0'),
             theme: localStorage.getItem('fmtv_theme') || 'auto',
-            tmdbKey: localStorage.getItem('fmtv_tmdb_key') || '',
+            morningVideo: localStorage.getItem('fmtv_morning_video') || 'assets/bg/morning.mp4',
             catalog: DEFAULT_CATALOG.slice(),
-            picksTab: 'movies',
             hourlyForecast: [],
             sunrise: '',
             sunset: '',
@@ -1196,7 +1180,15 @@
 
             document.getElementById('screensaverClock').textContent = timeStr;
             document.getElementById('screensaverDate').textContent = dateStr;
+
+            // Re-evaluate the Auto schedule when the hour rolls over (e.g. 17:59 -> 18:00).
+            var hour = now.getHours();
+            if (hour !== lastThemeHour) {
+                lastThemeHour = hour;
+                if (typeof applyTheme === 'function' && state.theme === 'auto') applyTheme();
+            }
         }
+        var lastThemeHour = new Date().getHours();
         setInterval(updateClock, 1000);
         updateClock();
 
@@ -1210,29 +1202,223 @@
         }
 
         // --- Theme Engine ---
-        function applyTheme() {
-            document.body.classList.remove('theme-day', 'theme-sunset', 'theme-oled');
-            var badge = document.getElementById('themeBadge');
-            if (state.theme === 'oled') {
-                document.body.classList.add('theme-oled');
-                badge.textContent = 'OLED Zero • 60 FPS';
-            } else if (state.theme === 'day') {
-                document.body.classList.add('theme-day');
-                badge.textContent = 'Daylight • 60 FPS';
-            } else if (state.theme === 'auto') {
-                if (state.isSunset) {
-                    document.body.classList.add('theme-sunset');
-                    badge.textContent = 'Sunset • 60 FPS';
-                } else if (!state.isNight) {
-                    document.body.classList.add('theme-day');
-                    badge.textContent = 'Daylight • 60 FPS';
-                } else {
-                    badge.textContent = 'Night • 60 FPS';
-                }
-            } else {
-                badge.textContent = '60 FPS • Onboard';
-            }
+        // Auto schedule (local clock):
+        //   05:00 - 11:59  morning  (forest / sea video)
+        //   12:00 - 17:59  day      (sunset tint when Open-Meteo says the sun is setting)
+        //   18:00 - 04:59  space    (purple cosmos, edugalbs.com style)
+        var MORNING_START_HOUR = 5;
+        var DAY_START_HOUR = 12;
+        var SPACE_START_HOUR = 18;
+
+        function scheduledTheme(hour) {
+            if (hour >= SPACE_START_HOUR || hour < MORNING_START_HOUR) return 'space';
+            if (hour < DAY_START_HOUR) return 'morning';
+            return state.isSunset ? 'sunset' : 'day';
         }
+
+        var THEME_BADGES = {
+            morning: 'Morning • 60 FPS',
+            day: 'Daylight • 60 FPS',
+            sunset: 'Sunset • 60 FPS',
+            space: 'Space • 60 FPS',
+            night: 'Night • 60 FPS',
+            oled: 'OLED Zero • 60 FPS'
+        };
+
+        function applyTheme() {
+            var resolved = state.theme === 'auto' ? scheduledTheme(new Date().getHours()) : state.theme;
+            if (!THEME_BADGES[resolved]) resolved = 'night';
+
+            document.body.classList.remove('theme-day', 'theme-sunset', 'theme-oled', 'theme-morning', 'theme-space');
+            if (resolved !== 'night') document.body.classList.add('theme-' + resolved);
+            document.getElementById('themeBadge').textContent = THEME_BADGES[resolved];
+
+            setMorningVideo(resolved === 'morning');
+            if (resolved === 'space') drawSpaceScene();
+        }
+
+        // --- Morning Video Background ---
+        // The <video> only holds a source while the morning theme is active so the
+        // decoder is idle (and nothing is downloaded) for the rest of the day.
+        var bgVideo = document.getElementById('bgVideo');
+        var bgVideoSrc = '';
+
+        bgVideo.addEventListener('canplay', function() {
+            bgVideo.classList.add('ready');
+            // play() issued right after src/load() can be dropped by the engine; retry once decodable.
+            if (bgVideo.paused && bgVideoSrc && !screensaverOn) tryPlayVideo();
+        });
+        bgVideo.addEventListener('error', function() {
+            bgVideo.classList.remove('ready');
+            console.warn('Morning video unavailable, keeping gradient: ' + bgVideoSrc);
+        });
+
+        function setMorningVideo(on) {
+            var wanted = on && state.morningVideo ? state.morningVideo : '';
+            if (wanted === bgVideoSrc) {
+                if (wanted && bgVideo.paused && !screensaverOn) tryPlayVideo();
+                return;
+            }
+            bgVideoSrc = wanted;
+            bgVideo.classList.remove('ready');
+            if (!wanted) {
+                bgVideo.pause();
+                bgVideo.removeAttribute('src');
+                bgVideo.load();
+                return;
+            }
+            bgVideo.src = wanted; // assigning src starts the load; play() is retried on canplay
+            tryPlayVideo();
+        }
+
+        // Browsers pause muted video in hidden documents; resume when the app is shown again.
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && bgVideoSrc && bgVideo.paused && !screensaverOn) tryPlayVideo();
+        });
+
+        function tryPlayVideo() {
+            var p = bgVideo.play();
+            if (p && typeof p.catch === 'function') p.catch(function() { /* autoplay blocked; retried on next theme tick */ });
+        }
+
+        // --- Space Scene (static canvas: stars, nebula haze, ringed planet) ---
+        // Drawn once per resolution, so it costs nothing per frame on the TV's GPU.
+        var spaceCanvas = document.getElementById('spaceCanvas');
+        var spaceStarsBright = document.getElementById('spaceStarsBright');
+        var spaceDrawnKey = '';
+
+        // Deterministic pseudo-random so the sky looks the same every boot.
+        function makeRng(seed) {
+            var s = seed >>> 0;
+            return function() {
+                s = (s * 1664525 + 1013904223) >>> 0;
+                return s / 4294967296;
+            };
+        }
+
+        function drawSpaceScene() {
+            var w = window.innerWidth, h = window.innerHeight;
+            var key = w + 'x' + h;
+            if (key === spaceDrawnKey || !spaceCanvas.getContext) return;
+            spaceDrawnKey = key;
+
+            spaceCanvas.width = w; spaceCanvas.height = h;
+            spaceStarsBright.width = w; spaceStarsBright.height = h;
+            var ctx = spaceCanvas.getContext('2d');
+            var ctxB = spaceStarsBright.getContext('2d');
+            var rnd = makeRng(20261022);
+            var i, x, y, r, g;
+
+            // Nebula haze
+            var hazes = [
+                [0.18, 0.30, 0.42, 'rgba(120, 60, 200, 0.16)'],
+                [0.82, 0.70, 0.46, 'rgba(70, 20, 130, 0.18)'],
+                [0.55, 0.10, 0.30, 'rgba(190, 150, 255, 0.07)']
+            ];
+            for (i = 0; i < hazes.length; i++) {
+                x = hazes[i][0] * w; y = hazes[i][1] * h; r = hazes[i][2] * w;
+                g = ctx.createRadialGradient(x, y, 0, x, y, r);
+                g.addColorStop(0, hazes[i][3]);
+                g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, w, h);
+            }
+
+            // Faint star dust
+            var dust = Math.round(w * h / 4200);
+            for (i = 0; i < dust; i++) {
+                x = rnd() * w; y = rnd() * h; r = 0.4 + rnd() * 0.9;
+                ctx.fillStyle = 'rgba(232, 241, 255, ' + (0.25 + rnd() * 0.45).toFixed(2) + ')';
+                ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Bright stars (own layer, twinkles via CSS opacity)
+            var bright = Math.round(w * h / 26000);
+            for (i = 0; i < bright; i++) {
+                x = rnd() * w; y = rnd() * h; r = 1.1 + rnd() * 1.4;
+                var tint = rnd() < 0.2 ? '201, 179, 255' : '255, 255, 255';
+                g = ctxB.createRadialGradient(x, y, 0, x, y, r * 4);
+                g.addColorStop(0, 'rgba(' + tint + ', 0.95)');
+                g.addColorStop(0.3, 'rgba(' + tint + ', 0.35)');
+                g.addColorStop(1, 'rgba(' + tint + ', 0)');
+                ctxB.fillStyle = g;
+                ctxB.beginPath(); ctxB.arc(x, y, r * 4, 0, Math.PI * 2); ctxB.fill();
+            }
+
+            // Ringed planet, top-right, partly off-screen so it never crowds the shelf.
+            var px = w * 0.86, py = h * 0.08, pr = Math.min(w, h) * 0.26;
+            var tilt = -0.32;
+
+            function ringPath(c, inner, outer, startA, endA) {
+                c.save();
+                c.translate(px, py);
+                c.rotate(tilt);
+                c.scale(1, 0.28);
+                c.beginPath();
+                c.arc(0, 0, outer, startA, endA, false);
+                c.arc(0, 0, inner, endA, startA, true);
+                c.closePath();
+                c.restore();
+            }
+
+            function fillRing(startA, endA) {
+                var bands = [
+                    [1.35, 1.52, 'rgba(201, 179, 255, 0.10)'],
+                    [1.52, 1.80, 'rgba(167, 139, 250, 0.28)'],
+                    [1.80, 1.86, 'rgba(40, 20, 70, 0.55)'],
+                    [1.86, 2.12, 'rgba(201, 179, 255, 0.20)']
+                ];
+                for (var b = 0; b < bands.length; b++) {
+                    ringPath(ctx, pr * bands[b][0], pr * bands[b][1], startA, endA);
+                    ctx.fillStyle = bands[b][2];
+                    ctx.fill();
+                }
+            }
+
+            // Back half of the rings
+            fillRing(Math.PI, Math.PI * 2);
+
+            // Planet body with banded stripes
+            ctx.save();
+            ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+            ctx.translate(px, py); ctx.rotate(tilt); ctx.translate(-px, -py);
+            var stripes = [
+                '#6d4fc4', '#4a2d96', '#8f72e0', '#3b2378', '#7a5bd0', '#52389f',
+                '#a78bfa', '#412680', '#6d4fc4', '#2f1a63', '#8f72e0', '#4a2d96'
+            ];
+            var band = (pr * 2) / stripes.length;
+            for (i = 0; i < stripes.length; i++) {
+                ctx.fillStyle = stripes[i];
+                ctx.fillRect(px - pr * 1.5, py - pr + i * band, pr * 3, band + 1);
+            }
+            ctx.restore();
+
+            // Lighting: highlight top-left, deep shadow bottom-right
+            ctx.save();
+            ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+            g = ctx.createRadialGradient(px - pr * 0.45, py - pr * 0.45, pr * 0.1, px, py, pr * 1.1);
+            g.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+            g.addColorStop(0.45, 'rgba(255, 255, 255, 0)');
+            g.addColorStop(0.75, 'rgba(3, 1, 5, 0.45)');
+            g.addColorStop(1, 'rgba(3, 1, 5, 0.92)');
+            ctx.fillStyle = g;
+            ctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+            ctx.restore();
+
+            // Outer glow
+            g = ctx.createRadialGradient(px, py, pr * 0.95, px, py, pr * 1.35);
+            g.addColorStop(0, 'rgba(139, 92, 246, 0.22)');
+            g.addColorStop(1, 'rgba(139, 92, 246, 0)');
+            ctx.fillStyle = g;
+            ctx.beginPath(); ctx.arc(px, py, pr * 1.35, 0, Math.PI * 2); ctx.fill();
+
+            // Front half of the rings (over the planet)
+            fillRing(0, Math.PI);
+        }
+
+        window.addEventListener('resize', function() {
+            if (document.body.classList.contains('theme-space')) drawSpaceScene();
+        });
 
         // --- Live Weather & Sunset (Open-Meteo) ---
         var WMO_CODES = {
@@ -1358,107 +1544,6 @@
                 });
         }
 
-        // --- Live Trending Picks (TMDB + Live TVMaze Zero-Key Feed), split by Movies/Shows tab ---
-        function fetchTrendingPicks() {
-            var badge = document.getElementById('picksSourceBadge');
-            var tab = state.picksTab;
-            var tmdbMediaPath = tab === 'shows' ? 'tv' : 'movie';
-
-            function showCurated() {
-                if (tab !== state.picksTab) return;
-                badge.textContent = 'Curated Picks';
-                renderPicks(tab === 'shows' ? FALLBACK_SHOWS : FALLBACK_MOVIES);
-            }
-
-            if (typeof fetch !== 'function') {
-                showCurated();
-                return;
-            }
-
-            // 1. If user provided a TMDB API Key, fetch live from TMDB for the active tab
-            var tmdbPromise;
-            if (state.tmdbKey && state.tmdbKey.trim().length > 8) {
-                var key = state.tmdbKey.trim();
-                var headers = key.length > 40 ? { 'Authorization': 'Bearer ' + key } : {};
-                var url = key.length > 40
-                    ? 'https://api.themoviedb.org/3/trending/' + tmdbMediaPath + '/week?language=en-US'
-                    : 'https://api.themoviedb.org/3/trending/' + tmdbMediaPath + '/week?api_key=' + encodeURIComponent(key);
-
-                tmdbPromise = fetch(url, { headers: headers })
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) {
-                        if (data.results && data.results.length >= 4 && tab === state.picksTab) {
-                            var items = data.results.slice(0, 4).map(function(item) {
-                                var title = item.title || item.name || 'Trending';
-                                var score = item.vote_average ? item.vote_average.toFixed(1) + '★' : 'Hot';
-                                return {
-                                    title: title,
-                                    badge: (tab === 'shows' ? 'Series' : 'Movie') + ' • ' + score,
-                                    service: 'TMDB Trending',
-                                    app: 'netflix',
-                                    desc: item.overview || 'Trending worldwide this week.',
-                                    poster: item.poster_path ? 'https://image.tmdb.org/t/p/w300' + item.poster_path : '',
-                                    color: '#0a84ff'
-                                };
-                            });
-                            badge.textContent = 'TMDB Live';
-                            renderPicks(items);
-                            return true;
-                        }
-                        return false;
-                    })
-                    .catch(function() { return false; });
-            } else {
-                tmdbPromise = Promise.resolve(false);
-            }
-
-            tmdbPromise
-                .then(function(handled) {
-                    if (handled) return true;
-
-                    // 2. Zero-Key Live Fallback: TVMaze only has TV data, so it covers the Shows tab;
-                    //    the Movies tab falls through to the curated list below without a TMDB key.
-                    if (tab === 'shows') {
-                        return fetch('https://api.tvmaze.com/shows?page=0')
-                            .then(function(res) { return res.json(); })
-                            .then(function(shows) {
-                                if (Array.isArray(shows) && shows.length > 0 && tab === state.picksTab) {
-                                    var topShows = shows
-                                        .filter(function(s) { return s.rating && s.rating.average >= 8.4 && s.image && s.image.medium; })
-                                        .sort(function() { return 0.5 - Math.random(); })
-                                        .slice(0, 4)
-                                        .map(function(s) {
-                                            var cleanSummary = (s.summary || '').replace(/<[^>]*>/g, '');
-                                            var genre = (s.genres && s.genres[0]) || 'Series';
-                                            var network = (s.network && s.network.name) || (s.webChannel && s.webChannel.name) || 'Streaming';
-                                            return {
-                                                title: s.name,
-                                                badge: genre + ' • ' + s.rating.average + '★',
-                                                service: 'Watch on ' + network,
-                                                app: 'netflix',
-                                                desc: cleanSummary || 'Critically acclaimed trending series.',
-                                                poster: s.image.medium,
-                                                color: '#0a84ff'
-                                            };
-                                        });
-                                    if (topShows.length === 4) {
-                                        badge.textContent = 'Live Popular Feed';
-                                        renderPicks(topShows);
-                                        return true;
-                                    }
-                                }
-                                return false;
-                            })
-                            .catch(function() { return false; });
-                    }
-                    return false;
-                })
-                .then(function(handled) {
-                    if (!handled) showCurated();
-                })
-                .catch(showCurated);
-        }
-
         // --- Discover Installed Apps from LG webOS ---
         function discoverTVApps() {
             if (!window.webOS || !window.webOS.service) return;
@@ -1565,7 +1650,7 @@
             } catch (e) { failure(e); }
         }
 
-        // --- Render App Shelf & Trending Row ---
+        // --- Render App Dock ---
         function renderAppsShelf() {
             var grid = document.getElementById('appsGrid');
             grid.innerHTML = '';
@@ -1628,44 +1713,7 @@
                 grid.appendChild(btn);
             });
 
-            document.getElementById('shelfCountHint').textContent = shelfEdit ? (movingTileId ? '← / → Move • OK Place • Back Cancel' : 'Select a tile • OK Pick up • Done to save') : favItems.length + ' Apps • Instant Launch';
-            refreshMainNavList();
-        }
-
-        function renderPicks(picks) {
-            var grid = document.getElementById('picksGrid');
-            grid.innerHTML = '';
-
-            picks.forEach(function(pick) {
-                var card = document.createElement('div');
-                card.className = 'pick-card nav-item';
-                card.dataset.app = pick.app;
-                card.dataset.tag = pick.badge;
-                card.dataset.title = pick.title;
-                card.dataset.desc = pick.desc;
-                card.dataset.color = pick.color || '#0a84ff';
-
-                var poster = document.createElement('div');
-                poster.className = 'pick-poster';
-                if (pick.poster) {
-                    poster.style.backgroundImage = "url('" + pick.poster + "')";
-                }
-
-                var meta = document.createElement('div');
-                meta.className = 'pick-meta';
-                meta.innerHTML =
-                    '<div class="pick-badge">' + pick.badge + '</div>' +
-                    '<div class="pick-title">' + pick.title + '</div>' +
-                    '<div class="pick-service">' + pick.service + '</div>';
-
-                card.appendChild(poster);
-                card.appendChild(meta);
-
-                card.addEventListener('mouseenter', function() { setMainFocus(card); });
-                card.addEventListener('click', function() { launchApp(pick.app); });
-                grid.appendChild(card);
-            });
-
+            document.getElementById('shelfCountHint').textContent = shelfEdit ? (movingTileId ? '← / → Move • OK Place • Back Cancel' : 'Select an icon • OK Pick up • Done to save') : favItems.length + ' Apps • Instant Launch';
             refreshMainNavList();
         }
 
@@ -1694,6 +1742,7 @@
             movingTileId = null;
             document.getElementById('reorderShelfBtn').hidden = false;
             document.getElementById('shelfEditActions').hidden = true;
+            document.getElementById('shelfTopBar').hidden = true;
             renderAppsShelf();
             setMainFocus(document.getElementById('reorderShelfBtn'));
             showToast(save ? 'Tile order saved' : 'Reordering cancelled');
@@ -1703,6 +1752,7 @@
             movingTileId = null;
             this.hidden = true;
             document.getElementById('shelfEditActions').hidden = false;
+            document.getElementById('shelfTopBar').hidden = false;
             renderAppsShelf();
             focusShelfTile(shelfEdit[0]);
         });
@@ -1725,7 +1775,7 @@
         var ambientGlow = document.getElementById('ambientGlow');
 
         function refreshMainNavList() {
-            mainNavItems = toArray(document.querySelectorAll(shelfEdit ? '.shelf-wrapper .nav-item' : '.nav-item')).filter(function(el) { return el.offsetParent !== null; });
+            mainNavItems = toArray(document.querySelectorAll(shelfEdit ? '.dock-area .nav-item' : '.nav-item')).filter(function(el) { return el.offsetParent !== null; });
             if (mainNavItems.length > 0) {
                 curIndex = Math.min(curIndex, mainNavItems.length - 1);
                 // Default focus on first app tile if starting
@@ -1738,7 +1788,7 @@
         }
 
         function setMainFocus(item) {
-            if (!item || (shelfEdit && !item.closest('.shelf-wrapper'))) return;
+            if (!item || (shelfEdit && !item.closest('.dock-area'))) return;
             document.querySelectorAll('.nav-item.focused').forEach(function(i) { i.classList.remove('focused'); });
             item.classList.add('focused');
             item.focus({ preventScroll: true });
@@ -1750,6 +1800,34 @@
 
             var color = item.dataset.color || '#0a84ff';
             ambientGlow.style.background = 'radial-gradient(circle, ' + color + '35 0%, rgba(0,0,0,0) 70%)';
+
+            updateDockMagnification(item);
+        }
+
+        // macOS dock magnification: neighbours of the focused icon grow and slide
+        // outward by distance (1, 2, 3+). Classes only, so it's all CSS transforms.
+        var DOCK_CLASSES = ['dock-l1', 'dock-l2', 'dock-l3', 'dock-r1', 'dock-r2', 'dock-r3'];
+        function updateDockMagnification(focusedItem) {
+            var tiles = toArray(document.querySelectorAll('#appsGrid .app-tile'));
+            var focusIdx = focusedItem && focusedItem.classList.contains('app-tile') ? tiles.indexOf(focusedItem) : -1;
+            tiles.forEach(function(tile, idx) {
+                DOCK_CLASSES.forEach(function(c) { tile.classList.remove(c); });
+                if (focusIdx === -1 || idx === focusIdx) return;
+                var d = Math.min(Math.abs(idx - focusIdx), 3);
+                tile.classList.add((idx < focusIdx ? 'dock-l' : 'dock-r') + d);
+            });
+        }
+
+        // Layout-space centre of a nav item. Dock tiles are measured by their row,
+        // not their own rect, because magnification transforms would otherwise make
+        // a neighbour look like it sits "above" the focused icon.
+        function navCenter(el) {
+            var r = el.getBoundingClientRect();
+            if (el.classList.contains('app-tile') && el.parentNode) {
+                var row = el.parentNode.getBoundingClientRect();
+                return { x: r.left + r.width / 2, y: row.top + row.height / 2 };
+            }
+            return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
         }
 
         // Geometric (position-based) focus movement for Up/Down: finds the nearest
@@ -1759,16 +1837,16 @@
         function moveFocusVertical(dir) {
             var current = mainNavItems[curIndex];
             if (!current) return;
-            var cur = current.getBoundingClientRect();
-            var curX = cur.left + cur.width / 2;
-            var curY = cur.top + cur.height / 2;
+            var cur = navCenter(current);
+            var curX = cur.x;
+            var curY = cur.y;
 
             var candidates = [];
             mainNavItems.forEach(function(el, idx) {
                 if (idx === curIndex) return;
-                var r = el.getBoundingClientRect();
-                var x = r.left + r.width / 2;
-                var y = r.top + r.height / 2;
+                var c = navCenter(el);
+                var x = c.x;
+                var y = c.y;
                 var dy = (y - curY) * dir;
                 // Threshold well above the focus hover-lift (tiles/cards shift up to ~6px on
                 // focus via translateY), otherwise that lift alone makes a same-row neighbor
@@ -1804,7 +1882,7 @@
             renderHDMIOptions();
             document.getElementById('cfgCity').value = state.city;
             document.getElementById('cfgTheme').value = state.theme;
-            document.getElementById('cfgTmdbKey').value = state.tmdbKey;
+            document.getElementById('cfgMorningVideo').value = state.morningVideo;
 
             renderAppSelectorGrid();
             settingsModal.classList.add('active');
@@ -1891,23 +1969,6 @@
             setMainFocus(document.getElementById('weatherWidget'));
         });
 
-        // --- Trending Tabs: Movies / Shows ---
-        function switchPicksTab(tab) {
-            if (state.picksTab === tab) return;
-            state.picksTab = tab;
-            document.getElementById('tabMovies').classList.toggle('active', tab === 'movies');
-            document.getElementById('tabShows').classList.toggle('active', tab === 'shows');
-            fetchTrendingPicks();
-        }
-        document.getElementById('tabMovies').addEventListener('click', function() { switchPicksTab('movies'); });
-        document.getElementById('tabShows').addEventListener('click', function() { switchPicksTab('shows'); });
-        document.getElementById('tabMovies').addEventListener('mouseenter', function() {
-            setMainFocus(document.getElementById('tabMovies'));
-        });
-        document.getElementById('tabShows').addEventListener('mouseenter', function() {
-            setMainFocus(document.getElementById('tabShows'));
-        });
-
         // --- Weather & Sun Drawer ---
         var weatherDrawer = document.getElementById('weatherDrawer');
         var closeDrawerBtn = document.getElementById('closeDrawerBtn');
@@ -1973,12 +2034,14 @@
             screensaverOverlay.classList.add('active');
             shiftScreensaverClock();
             pixelShiftTimer = setInterval(shiftScreensaverClock, PIXEL_SHIFT_MS);
+            if (bgVideoSrc) bgVideo.pause(); // don't decode video behind a black screen
         }
 
         function exitScreensaver() {
             screensaverOn = false;
             screensaverOverlay.classList.remove('active');
             clearInterval(pixelShiftTimer);
+            if (bgVideoSrc) tryPlayVideo();
         }
 
         function markActivity() {
@@ -2001,7 +2064,7 @@
             renderHDMIOptions();
             document.getElementById('cfgCity').value = '';
             document.getElementById('cfgTheme').value = 'auto';
-            document.getElementById('cfgTmdbKey').value = '';
+            document.getElementById('cfgMorningVideo').value = 'assets/bg/morning.mp4';
             renderAppSelectorGrid();
             refreshModalNavList();
             showToast('Defaults restored');
@@ -2013,17 +2076,16 @@
             localStorage.setItem('fmtv_hdmi_devices', JSON.stringify(state.hdmiDevices));
             state.city = document.getElementById('cfgCity').value.trim();
             state.theme = document.getElementById('cfgTheme').value;
-            state.tmdbKey = document.getElementById('cfgTmdbKey').value.trim();
+            state.morningVideo = document.getElementById('cfgMorningVideo').value.trim() || 'assets/bg/morning.mp4';
 
             localStorage.setItem('fmtv_favorites', JSON.stringify(state.favorites));
             localStorage.setItem('fmtv_city', state.city);
             localStorage.setItem('fmtv_theme', state.theme);
-            localStorage.setItem('fmtv_tmdb_key', state.tmdbKey);
+            localStorage.setItem('fmtv_morning_video', state.morningVideo);
 
             renderAppsShelf();
             applyTheme();
             fetchWeather();
-            fetchTrendingPicks();
             closeSettingsModal();
             showToast('Saved & Applied!');
         });
@@ -2119,14 +2181,11 @@
 
         // --- Boot Sequence ---
         renderAppsShelf();
-        renderPicks(FALLBACK_MOVIES);
         applyTheme();
         fetchWeather();
-        fetchTrendingPicks();
         discoverTVApps();
-        // Refresh weather & picks every 30 mins
+        // Refresh weather every 30 mins
         setInterval(fetchWeather, 30 * 60 * 1000);
-        setInterval(fetchTrendingPicks, 60 * 60 * 1000);
     </script>
 </body>
 </html>

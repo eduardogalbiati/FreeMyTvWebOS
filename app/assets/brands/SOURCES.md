@@ -14,3 +14,5 @@ https://commons.wikimedia.org/wiki/File:Globoplay_logo_2020.svg
 
 Wikimedia SVGs are also recolored white. Brand names and logos belong to their
 respective owners and identify the destination apps/devices; no endorsement is implied.
+
+HBO Max: plain text wordmark drawn in-house (hbomax.svg), no third-party artwork.
