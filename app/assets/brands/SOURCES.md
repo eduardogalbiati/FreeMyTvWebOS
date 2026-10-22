@@ -16,3 +16,6 @@ Wikimedia SVGs are also recolored white. Brand names and logos belong to their
 respective owners and identify the destination apps/devices; no endorsement is implied.
 
 HBO Max: plain text wordmark drawn in-house (hbomax.svg), no third-party artwork.
+
+Inter typeface (assets/fonts/*.woff2): Rasmus Andersson, SIL Open Font License 1.1
+(assets/fonts/OFL.txt). Latin and Latin Extended subsets as served by Google Fonts.
